@@ -1,0 +1,64 @@
+import express from "express";
+import { MongoClient, ObjectId } from "mongodb";
+import dotenv from "dotenv";
+import cors from "cors";
+import joi from "joi";
+
+const app = express();
+dotenv.config();
+app.use(cors());
+app.use(express.json());
+
+const mongoClient = new MongoClient(process.env.DATABASE_URL);
+let db;
+
+try {
+  await mongoClient.connect();
+  db = mongoClient.db();
+  console.log("Conectado ao mongodb");
+} catch (error) {
+  console.log("Deu erro no mongodb", error.message);
+}
+
+const registCollection = db.collection("registration");
+const inputCollections = db.collection("input");
+const outputCollection = db.collection("output");
+
+app.post("/cadastro", async (req, res) => {
+  const { name, email, password, repeatPassword } = req.body;
+    console.log("1")
+  const schema = joi.object({
+    name: joi.string().alphanum().min(3).max(10).required(),
+    email: joi.string().email({ minDomainSegments: 2, tlds: { allow: ["com", "net"] } }).required(),
+    password: joi.string().alphanum().min(3).max(10).required(),
+    repeatPassword: joi.ref("password")
+  });
+
+  const verification = schema.validate(
+    { name, email, password, repeatPassword },
+    { abortEarly: false }
+  );
+  if (verification.error) {
+    return res.status(422).send(verification.error);
+  }
+
+  try {
+    await registCollection.insertOne({
+      name,
+      email,
+      password,
+      repeatPassword
+    });
+
+    return res.sendStatus(201);
+  } catch (err) {
+    return res.status(500).send(err.message);
+  }
+});
+
+app.get("/", (req, res)=>{
+    return res.send("heloo")
+})
+
+const port = 5000;
+app.listen(port, () => console.log("Server is running !!"));
