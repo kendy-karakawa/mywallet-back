@@ -24,6 +24,21 @@ const registCollection = db.collection("registration");
 const inputCollections = db.collection("input");
 const outputCollection = db.collection("output");
 
+app.post("/", async (req, res)=>{
+    const {email, password} = req.body
+
+    try {
+        const findUser = await registCollection.findOne({email})
+        if (!findUser) return res.status(404).send("User not found")
+        if (findUser && findUser.password !== password) return res.status(401).send("Invalid password")
+
+        return res.sendStatus(200)
+    } catch (error) {
+        return res.status(500).send(error.message)
+    }
+})
+
+
 app.post("/cadastro", async (req, res) => {
   const { name, email, password, repeatPassword } = req.body;
     console.log("1")
@@ -43,6 +58,9 @@ app.post("/cadastro", async (req, res) => {
   }
 
   try {
+    const findName = registCollection.findOne({name})
+    if (findName) return res.sendStatus(409)
+    
     await registCollection.insertOne({
       name,
       email,
@@ -56,9 +74,7 @@ app.post("/cadastro", async (req, res) => {
   }
 });
 
-app.get("/", (req, res)=>{
-    return res.send("heloo")
-})
+
 
 const port = 5000;
 app.listen(port, () => console.log("Server is running !!"));
