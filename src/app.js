@@ -98,6 +98,31 @@ app.post("/nova-entrada", async (req, res)=>{
     }
 })
 
+app.put("/nova-entrada", async (req, res)=>{
+ const email = req.headers.email
+ const {id, value, description} = req.body
+
+ const findUser = await registCollection.findOne({email: email})
+ if(!findUser) return res.sendStatus(401)
+
+ const schema = joi.object({
+     value: joi.number().required(),
+     description: joi.string().min(3).required()
+ })
+
+ const verification = schema.validate({value, description})
+ if(verification.error) return res.status(422).send(verification.error)
+
+ try {
+  const result = await movimentCollections.updateOne({_id:ObjectId(id)}, {$set: {value, description}})
+  if(result.modifiedCount === 0) return res.status(404).send("Essa movimentação não existe!")
+  res.send("Movimentação atualizada")
+  
+ } catch (error) {
+  return res.status(500).send(error.message)
+ }
+})
+
 app.post("/nova-saida", async (req, res)=>{
   const {value, description} = req.body
   const email = req.headers.email
@@ -120,6 +145,31 @@ app.post("/nova-saida", async (req, res)=>{
       return res.status(500).send(error.message)
   }
 })
+
+app.put("/nova-saida", async (req, res)=>{
+  const email = req.headers.email
+  const {id, value, description} = req.body
+ 
+  const findUser = await registCollection.findOne({email: email})
+  if(!findUser) return res.sendStatus(401)
+ 
+  const schema = joi.object({
+      value: joi.number().required(),
+      description: joi.string().min(3).required()
+  })
+ 
+  const verification = schema.validate({value, description})
+  if(verification.error) return res.status(422).send(verification.error)
+ 
+  try {
+   const result = await movimentCollections.updateOne({_id:ObjectId(id)}, {$set: {value, description}})
+   if(result.modifiedCount === 0) return res.status(404).send("Essa movimentação não existe!")
+   res.send("Movimentação atualizada")
+   
+  } catch (error) {
+   return res.status(500).send(error.message)
+  }
+ })
 
 app.get("/home", async (req, res)=>{
   const email = req.headers.email
