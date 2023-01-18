@@ -130,11 +130,31 @@ app.get("/home", async (req, res)=>{
   try {
     const movimentsList = await movimentCollections.find({email: email}).toArray()
     return res.status(200).send(movimentsList)
-    
+
   } catch (error) {
-    return res.sendStatus(500)
+    return res.status(500).send(error.message)
   }
 
+
+})
+
+app.delete("/home", async (req, res)=>{
+  const email = req.headers.email
+  const id = req.body.id
+
+  try {
+    const finduser = await registCollection.findOne({email})
+    if(!finduser) return res.sendStatus(401)
+
+    const findId = await movimentCollections.findOne({_id: ObjectId(id)})
+    if(!findId) return res.sendStatus(404)
+
+    await movimentCollections.deleteOne({_id:ObjectId(id)})
+    return res.sendStatus(200)
+
+  } catch (error) {
+    return res.status(500).send(error.message)
+  }
 
 })
 
