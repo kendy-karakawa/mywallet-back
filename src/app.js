@@ -22,8 +22,7 @@ try {
 }
 
 const registCollection = db.collection("registration");
-const inputCollections = db.collection("input");
-const outputCollection = db.collection("output");
+const movimentCollections = db.collection("moviment");
 const date = dayjs().format("DD/MM")
 
 app.post("/", async (req, res)=>{
@@ -88,11 +87,30 @@ app.post("/nova-entrada", async (req, res)=>{
     if(verification.error) return res.status(422).send(verification.error)
 
     try {
-        await inputCollections.insertOne({value, description, date: date})
+        await movimentCollections.insertOne({value, description, date: date, type: "input"})
         return res.sendStatus(201)
     } catch (error) {
         return res.status(500).send(error.message)
     }
+})
+
+app.post("/nova-saida", async (req, res)=>{
+  const {value, description} = req.body
+
+  const schema = joi.object({
+      value: joi.number().required(),
+      description: joi.string().min(3).required()
+  })
+
+  const verification = schema.validate({value, description})
+  if(verification.error) return res.status(422).send(verification.error)
+
+  try {
+      await movimentCollections.insertOne({value, description, date: date, type: "output"})
+      return res.sendStatus(201)
+  } catch (error) {
+      return res.status(500).send(error.message)
+  }
 })
 
 const port = 5000;
