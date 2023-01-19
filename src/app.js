@@ -4,6 +4,8 @@ import dotenv from "dotenv";
 import cors from "cors";
 import joi from "joi";
 import dayjs from "dayjs";
+import bcrypt from 'bcrypt';
+import { v4 as uuid } from 'uuid';
 
 const app = express();
 dotenv.config();
@@ -23,6 +25,7 @@ try {
 
 const registCollection = db.collection("registration");
 const movimentCollections = db.collection("moviment");
+const sessions = db.collection("sessions")
 const date = dayjs().format("DD/MM")
 
 app.post("/", async (req, res)=>{
@@ -30,8 +33,8 @@ app.post("/", async (req, res)=>{
 
     try {
         const findUser = await registCollection.findOne({email})
-        if (!findUser) return res.status(404).send("User not found")
-        if (findUser && findUser.password !== password) return res.status(401).send("Invalid password")
+        if (!findUser) return res.status(400).send("E-mail ou senha incorreto")
+        if (findUser && findUser.password !== password) return res.status(400).send("E-mail ou senha incorreto")
 
         return res.sendStatus(200)
     } catch (error) {
@@ -42,7 +45,7 @@ app.post("/", async (req, res)=>{
 
 app.post("/cadastro", async (req, res) => {
   const { name, email, password, repeatPassword } = req.body;
-    console.log("1")
+    
   const schema = joi.object({
     name: joi.string().alphanum().min(3).max(10).required(),
     email: joi.string().email({ minDomainSegments: 2, tlds: { allow: ["com", "net"] } }).required(),
@@ -59,14 +62,15 @@ app.post("/cadastro", async (req, res) => {
   }
 
   try {
-    const findName = registCollection.findOne({name})
-    if (findName) return res.sendStatus(409)
+    const findEmail = await registCollection.findOne({email})
+    if (findEmail) return res.status(409).send("Este e-mail ja foi utilizado")
+
+    const criptPassaword = bcrypt.hashSync(password, 10)
     
     await registCollection.insertOne({
       name,
       email,
-      password,
-      repeatPassword
+      password: criptPassaword
     });
 
     return res.sendStatus(201);
