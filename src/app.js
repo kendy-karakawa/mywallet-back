@@ -33,10 +33,13 @@ app.post("/", async (req, res)=>{
 
     try {
         const findUser = await registCollection.findOne({email})
-        if (!findUser) return res.status(400).send("E-mail ou senha incorreto")
-        if (findUser && findUser.password !== password) return res.status(400).send("E-mail ou senha incorreto")
+        if (findUser && bcrypt.compareSync(password, findUser.password)){
+          return res.sendStatus(200)
+        } else{
+          return res.status(400).send("E-mail ou senha incorreto")
+        }
 
-        return res.sendStatus(200)
+        
     } catch (error) {
         return res.status(500).send(error.message)
     }
