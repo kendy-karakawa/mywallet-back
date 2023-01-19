@@ -34,7 +34,13 @@ app.post("/", async (req, res)=>{
     try {
         const findUser = await registCollection.findOne({email})
         if (findUser && bcrypt.compareSync(password, findUser.password)){
-          return res.sendStatus(200)
+
+          const token = uuid()
+
+          await sessions.insertOne({userId:findUser._id, token})
+
+
+          return res.status(200).send(token)
         } else{
           return res.status(400).send("E-mail ou senha incorreto")
         }
