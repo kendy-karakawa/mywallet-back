@@ -18,11 +18,12 @@ export async function login(req, res){
         if (findUser && bcrypt.compareSync(password, findUser.password)){
 
           const token = uuid()
+          const name = findUser.name
 
           await sessions.insertOne({userId:findUser._id, token})
 
 
-          return res.status(200).send(token)
+          return res.status(200).send({token,name})
         } else{
           return res.status(400).send("E-mail ou senha incorreto")
         }
