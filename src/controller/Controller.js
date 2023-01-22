@@ -120,8 +120,8 @@ export async function listMoviments(req, res){
 }
 
 export async function deleteMoviment(req, res){
-    const id = req.body.id
-  
+    const id = req.params.id
+    
     try {
   
       const findId = await movimentCollections.findOne({_id: ObjectId(id)})

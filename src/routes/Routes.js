@@ -15,6 +15,6 @@ router.put("/nova-entrada",validateSchema(movimentSchema), editInput);
 router.post("/nova-saida",validateSchema(movimentSchema), output);
 router.put("/nova-saida",validateSchema(movimentSchema), editOutput);
 router.get("/home", listMoviments);
-router.delete("/home", deleteMoviment);
+router.delete("/home/:id", deleteMoviment);
 
 export default router
